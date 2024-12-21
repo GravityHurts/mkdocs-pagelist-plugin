@@ -32,13 +32,13 @@ class PageListPlugin(BasePlugin):
                 print(f"Error reading file {file.abs_src_path}: {e}")
                 return
 
-        for match in re.finditer(r'\{pagelist(?:\s+(\d+|g$|i$)\s*(.*?))?(?:\|\s*(.*))?\}', content):
+        for match in re.finditer(r'\{pagelist(?:\s+(\d+|g|i)\s*(.*?))?(?:\|\s*(.*))?\}', content):
             page_list_code = match.group(0)
             page_url = file.url
             self.page_list_info.append({'page_url': page_url, 'page_list_code': page_list_code})
 
     def on_post_page(self, output, page, config):
-        matches = re.finditer(r'\{pagelist(?:\s+(\d+|g$|i$)\s*(.*?))?(?:\|\s*(.*))?\}', output) # Nothing is generated if either digit, 'i' or 'g' is not the first argument
+        matches = re.finditer(r'\{pagelist(?:\s+(\d+|g|i)\s*(.*?))?(?:\|\s*(.*))?\}', output)
 
         for match in matches:
             if match.group(1) == 'i':
@@ -48,8 +48,6 @@ class PageListPlugin(BasePlugin):
                 group_folders = match.group(1) == 'g'
                 tags_to_filter = match.group(2).strip().split() if match.group(2) else page.meta.get('tags', [])
                 limit = int(match.group(1)) if match.group(1) and match.group(1).isdigit() else None
-                if limit == 0:  # We expect limit of generated links to be defined all the time (if 'g' or 'i' option is not used). 0 means unlimited.
-                    limit = None
                 folders_to_filter = match.group(3).strip().split() if match.group(3) else []
 
                 filtered_list = self._format_links_by_folder_and_tag(tags_to_filter, page, config, group_folders, limit, folders_to_filter)
@@ -60,7 +58,7 @@ class PageListPlugin(BasePlugin):
     def generate_page_list_info_output(self, page_list_info, current_page):
         output = '<ol class="page-list-info">'
         for info in page_list_info:
-            relative_path = self._get_relative_path(current_page.url, info['page_url'])
+            relative_path = self.realrelpath(current_page.url, info['page_url'])
             output += f"<li><a href='{relative_path}'>{info['page_url']}</a> - {info['page_list_code']}</li>"
         output += '</ol>'
         return output
@@ -93,10 +91,9 @@ class PageListPlugin(BasePlugin):
             for page in pages:
                 if limit is not None and item_count >= limit:
                     break  # Stop adding links once the limit is reached
-                relative_path = self._get_relative_path(current_page.url, page.url)
-                if current_page.url != page.url:  # Don't generate link for myself
-                    result += f'<li><a href="{relative_path}">{page.title}</a></li>\n'
-                    item_count += 1
+                relative_path = self.realrelpath(current_page.url, page.url)
+                result += f'<li><a href="{relative_path}">{page.title}</a></li>\n'
+                item_count += 1
             result += '</ul>\n'
             if limit is not None and item_count >= limit:
                 break  # Break the outer loop as well if the limit is reached
@@ -126,12 +123,30 @@ class PageListPlugin(BasePlugin):
         folder_title = ' '.join(part.capitalize() for part in relevant_parts)
         return folder_title
 
-    def _get_relative_path(self, from_url, to_url):
-        from_parts = Path(urlsplit(from_url).path).parts
-        to_parts = Path(urlsplit(to_url).path).parts
-        common_prefix_length = len(os.path.commonprefix([from_parts, to_parts]))
-        relative_path = ['..'] * (len(from_parts) - common_prefix_length - 1) + list(to_parts[common_prefix_length:])
-        return '/'.join(relative_path)
+    # Copy the realrelpath function here
+    def realrelpath(self, origin, dest):
+        '''Get the relative path between two paths, accounting for filepaths'''
+
+        # get the absolute paths so that strings can be compared
+        origin = os.path.abspath(origin) 
+        dest = os.path.abspath(dest) 
+
+        # find out if the origin and destination are filepaths
+        origin_isfile = os.path.isfile(origin)
+        dest_isfile = os.path.isfile(dest)
+
+        # if dealing with filepaths, 
+        if origin_isfile or dest_isfile:
+            # get the base filename
+            filename = os.path.basename(dest) if origin_isfile else os.path.basename(dest)
+            # in cases where we're dealing with a file, use only the directory name
+            origin = os.path.dirname(origin) if origin_isfile else origin
+            dest = os.path.dirname(dest) if dest_isfile else dest 
+            # get the relative path between directories, then re-add the filename
+            return os.path.join(os.path.relpath(dest, origin), filename)  
+        else:
+            # if not dealing with any filepaths, just run relpath as usual
+            return os.path.relpath(dest, origin)
 
     def on_files(self, files, config):
         self.files = files
