@@ -86,8 +86,10 @@ class PageListPlugin(BasePlugin):
         item_count = 0  # Initialize item count
 
         for folder, pages in folder_groups.items():
-            if group_folders == 'g' or group_folders == 'b':
+            if group_folders == 'g':
                 result += f'<h3 class="pagelistheading">{folder.capitalize()}</h3>\n'
+            if group_folders == 'b':
+                result += f'<h3 class="pagelistheading">{folder.title()}</h3>\n'
             result += '<ul class="pagelistlist">\n'
             for page in pages:
                 if limit is not None and item_count >= limit:
@@ -128,7 +130,7 @@ class PageListPlugin(BasePlugin):
                 relevant_parts = path_parts[0]
         folder_title = ' '.join(part.capitalize() for part in relevant_parts) # if group_folders == 'g'
         if group_folders == 'b':
-            folder_title = relevant_parts
+            folder_title = relevant_parts.replace('_', ' ').title()
 
         return folder_title
 
