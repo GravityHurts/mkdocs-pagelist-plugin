@@ -79,14 +79,20 @@ class PageListPlugin(BasePlugin):
 
                 if folder_name not in folder_groups:
                     folder_groups[folder_name] = []
-                folder_groups[folder_name].append(file.page)
+                
+                folder_name_append = file.page
+                if len(folder_groups[folder_name]) > 0:
+                    folder_name_append = f" / {file.page}"
+
+                folder_groups[folder_name].append(folder_name_append)
 
         result = '<div class="pagelist">'
         item_count = 0  # Initialize item count
 
         for folder, pages in folder_groups.items():
             if group_folders:
-                result += f'<h3 class="pagelistheading">{folder.capitalize()}</h3>\n'
+                folder_name = folder.replace('_', ' ').title()
+                result += f'<h3 class="pagelistheading">{folder_name}</h3>\n'
             result += '<ul class="pagelistlist">\n'
             for page in pages:
                 if limit is not None and item_count >= limit:

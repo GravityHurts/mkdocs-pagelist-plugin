@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: mkdocs-pagelist-plugin
-Version: 0.2.3
+Version: 0.2.4
 Summary: A MkDocs plugin to list pages based on tags and folders
 Home-page: https://github.com/alanpt/mkdocs-pagelist-plugin
 Author: Alan Proctor-Thomson
