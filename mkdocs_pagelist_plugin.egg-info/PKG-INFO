@@ -43,11 +43,15 @@ plugins:
 
 > **Note**: If you have no `plugins` entry in your config file yet, you'll need to add it before adding PageListPlugin, as MkDocs enables only the `search` plugin by default.
 
-
+## Flags
+- i: Generate a report of all `{pagelist}` commands used across the site
+- g: Group pages by full folder structure
+- b: Group pages by onlyl the parent folder name
+- digit: Limit number of links generated
 
 ## Examples
 
-> **Note**: You always have to specify either 'i', 'g', or digit as a first argument. Setting `0` as a first argument means unlimited amount of generated links.
+> **Note**: You always have to specify either 'i', 'g', 'b', or digit as a first argument. Setting `0` as a first argument means unlimited amount of generated links.
 
 - **List other pages sharing the same tags as the current page**:
   ```
@@ -62,6 +66,11 @@ plugins:
 - **Group pages by folder, sharing the same tags as the current page**:
   ```
   {pagelist g}
+  ```
+
+- **Group pages by folder, displaying only the parent folder name, sharing the same tags as the current page**:
+  ```
+  {pagelist b}
   ```
 
 - **List 5 pages tagged with 'draft'**:
@@ -92,6 +101,11 @@ plugins:
 - **Group pages by folder, tagged with 'leads'**:
   ```
   {pagelist g leads}
+  ```
+
+- **Group pages by folder, displaying only the parent folder name, tagged with 'leads'**:
+  ```
+  {pagelist b leads}
   ```
 
 - **Group pages by folder, tagged with 'leads' but not 'draft'**:
